@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'sam.lambda Sample SAM Template for sam.lambda
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+Parameters:
+  ProjectCode:
+    Type: String
+    Default: waqtec
+Resources:
+  CfUrlRewriteRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${ProjectCode}-CfUrlRewrite-Role
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - edgelambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      Policies:
+      - PolicyName:
+          Fn::Sub: ${ProjectCode}-CfUrlRewrite-Policy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+            - lambda:*
+            - cloudfront:*
+            Effect: Allow
+            Resource: '*'
+  CloudfrontUrlRewrite:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://cdktoolkit-stagingbucket-yo88bndv88wz/783d5dc892e94bfab2c713e35bee356f
+      Handler: url_rewrite.lambda_handler
+      Runtime: python3.7
+      DeploymentPreference:
+        Enabled: true
+        Type: AllAtOnce
+      AutoPublishAlias: latest
+      Role:
+        Fn::GetAtt:
+        - CfUrlRewriteRole
+        - Arn
